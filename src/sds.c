@@ -57,6 +57,7 @@ static inline int sdsHdrSize(char type) {
     return 0;
 }
 
+// 确定 SDS 的类型
 static inline char sdsReqType(size_t string_size) {
     if (string_size < 1<<5)
         return SDS_TYPE_5;
@@ -86,6 +87,7 @@ static inline char sdsReqType(size_t string_size) {
  * You can print the string with printf() as there is an implicit \0 at the
  * end of the string. However the string is binary safe and can contain
  * \0 characters in the middle, as the length is stored in the sds header. */
+// init: 字符串，initlen: 长度
 sds sdsnewlen(const void *init, size_t initlen) {
     void *sh;
     sds s;
@@ -93,23 +95,38 @@ sds sdsnewlen(const void *init, size_t initlen) {
     /* Empty strings are usually created in order to append. Use type 8
      * since type 5 is not good at this. */
     if (type == SDS_TYPE_5 && initlen == 0) type = SDS_TYPE_8;
+
+    // 获取 sdshdr struct 的大小
     int hdrlen = sdsHdrSize(type);
     unsigned char *fp; /* flags pointer. */
 
+    // hdrlen + initlen + 1 是结构体的长度 + 字符串的长度 + 1
     sh = s_malloc(hdrlen+initlen+1);
+
+    // SDS 是否初始化
+    // 不初始化，init 指针指向 NULL
+    // 初始化，则调用 memset 将新分配的空间置零
     if (init==SDS_NOINIT)
         init = NULL;
     else if (!init)
         memset(sh, 0, hdrlen+initlen+1);
+
+    // sh == NULL，表示无法分配内存了
     if (sh == NULL) return NULL;
+
+    // s 指向字符串的 buf 数组地址
+    // fp 指向字符串的 flag 
     s = (char*)sh+hdrlen;
     fp = ((unsigned char*)s)-1;
+
+    // 初始化字符串长度，分配长度，flag
     switch(type) {
         case SDS_TYPE_5: {
             *fp = type | (initlen << SDS_TYPE_BITS);
             break;
         }
         case SDS_TYPE_8: {
+            // SDS_HDR_VAR 后，sh 被转换为一个 struct sdshdrT 类型的结构指针
             SDS_HDR_VAR(8,s);
             sh->len = initlen;
             sh->alloc = initlen;
@@ -138,14 +155,18 @@ sds sdsnewlen(const void *init, size_t initlen) {
             break;
         }
     }
+    // 初始化字符串
     if (initlen && init)
         memcpy(s, init, initlen);
     s[initlen] = '\0';
+
+    // 返回字符串
     return s;
 }
 
 /* Create an empty (zero length) sds string. Even in this case the string
  * always has an implicit null term. */
+// 创建一个 空 的 sds string
 sds sdsempty(void) {
     return sdsnewlen("",0);
 }
@@ -162,8 +183,12 @@ sds sdsdup(const sds s) {
 }
 
 /* Free an sds string. No operation is performed if 's' is NULL. */
+// 释放一个 sds string 对象
+
 void sdsfree(sds s) {
     if (s == NULL) return;
+
+    // (char*)s-sdsHdrSize(s[-1]) 是一个指向 sdshdr 结构体的指针
     s_free((char*)s-sdsHdrSize(s[-1]));
 }
 

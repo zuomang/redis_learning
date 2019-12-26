@@ -44,10 +44,16 @@ typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+// ((__packed__)) 取消字节对齐
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
 };
+
+// len 记录当前字节数组的长度，不包括 \0，是的获取字节数组的长度时间复杂度变为 O1
+// alloc 记录了当前字节数组总共分配的内存大小，不包括 \0
+// flags 当前字节数组的属性、用来标识到底是sdshdr8还是sdshdr16等
+// 保存了字符串真正的值以及末尾的一个 \0
 struct __attribute__ ((__packed__)) sdshdr8 {
     uint8_t len; /* used */
     uint8_t alloc; /* excluding the header and null terminator */

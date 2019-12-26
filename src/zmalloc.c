@@ -73,6 +73,8 @@ void zlibc_free(void *ptr) {
 
 #define update_zmalloc_stat_alloc(__n) do { \
     size_t _n = (__n); \
+    // _n && (sizeof(long)-1) 表示分配的容量不能被 8 整除
+    // used_memory 总数 = 
     if (_n&(sizeof(long)-1)) _n += sizeof(long)-(_n&(sizeof(long)-1)); \
     atomicIncr(used_memory,__n); \
 } while(0)
@@ -96,6 +98,9 @@ static void zmalloc_default_oom(size_t size) {
 static void (*zmalloc_oom_handler)(size_t) = zmalloc_default_oom;
 
 void *zmalloc(size_t size) {
+    // HAVA_MALLOC_SIZE 表示 malloc 函数记录了分配的内存大小
+    // HAVA_MALLOC_SIZE 没有定义，则表示需要使用多分配的一个 PREFIX_SIZE 来存储实际分配的大小
+    // PREFIX_SIZE 为 long long 或者 size_t
     void *ptr = malloc(size+PREFIX_SIZE);
 
     if (!ptr) zmalloc_oom_handler(size);
@@ -103,6 +108,7 @@ void *zmalloc(size_t size) {
     update_zmalloc_stat_alloc(zmalloc_size(ptr));
     return ptr;
 #else
+    // 将 size 存在多分配的一个 size_t 结构中
     *((size_t*)ptr) = size;
     update_zmalloc_stat_alloc(size+PREFIX_SIZE);
     return (char*)ptr+PREFIX_SIZE;
@@ -173,8 +179,11 @@ void *zrealloc(void *ptr, size_t size) {
 /* Provide zmalloc_size() for systems where this function is not provided by
  * malloc itself, given that in that case we store a header with this
  * information as the first bytes of every allocation. */
+// 为malloc本身未提供此功能的系统提供zmalloc_size函数，
+// 因为在这种情况下，我们将带有此信息的标头存储为每个分配的第一个字节
 #ifndef HAVE_MALLOC_SIZE
 size_t zmalloc_size(void *ptr) {
+    // 指向真实分配对象的地址，而不是多分配的对象的地址
     void *realptr = (char*)ptr-PREFIX_SIZE;
     size_t size = *((size_t*)realptr);
     /* Assume at least that all the allocations are padded at sizeof(long) by
