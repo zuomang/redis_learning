@@ -245,6 +245,7 @@
 #define ZIPLIST_END_SIZE        (sizeof(uint8_t))
 
 /* Return the pointer to the first entry of a ziplist. */
+// 返回第一个 entry 的指针
 #define ZIPLIST_ENTRY_HEAD(zl)  ((zl)+ZIPLIST_HEADER_SIZE)
 
 /* Return the pointer to the last entry of a ziplist, using the
@@ -269,6 +270,8 @@
  * Note that this is not how the data is actually encoded, is just what we
  * get filled by a function in order to operate more easily. */
 typedef struct zlentry {
+    // prevrawlen 是上一个 entry 的长度，prevrawlensize 为上一个 entry 长度编码
+    // len 是当前 entry 的长度，lensize 为当前 entry 长度编码
     unsigned int prevrawlensize; /* Bytes used to encode the previous entry len*/
     unsigned int prevrawlen;     /* Previous entry len. */
     unsigned int lensize;        /* Bytes used to encode this entry type/len.
@@ -407,6 +410,8 @@ int zipStorePrevEntryLengthLarge(unsigned char *p, unsigned int len) {
  * number of bytes needed to encode this length if "p" is NULL. */
 unsigned int zipStorePrevEntryLength(unsigned char *p, unsigned int len) {
     if (p == NULL) {
+        /* 前一节点长度小于 254，reqlen += 1 */
+        /* 前一节点长度大于 254，reqlen += 5 */
         return (len < ZIP_BIG_PREVLEN) ? 1 : sizeof(len)+1;
     } else {
         if (len < ZIP_BIG_PREVLEN) {
@@ -477,6 +482,8 @@ unsigned int zipRawEntryLength(unsigned char *p) {
 
 /* Check if string pointed to by 'entry' can be encoded as an integer.
  * Stores the integer value in 'v' and its encoding in 'encoding'. */
+// 检查 entry 所指向的 string 是否可以被 encode 成一个 int
+// 如果可以就按照对应的编码格式存储在 v 中
 int zipTryEncoding(unsigned char *entry, unsigned int entrylen, long long *v, unsigned char *encoding) {
     long long value;
 
@@ -576,9 +583,13 @@ void zipEntry(unsigned char *p, zlentry *e) {
 
 /* Create a new empty ziplist. */
 unsigned char *ziplistNew(void) {
+    // ZIPLIST_HEADER_SIZE = 2*32 + 16
+    // 额外的 1 用来存储结束符
     unsigned int bytes = ZIPLIST_HEADER_SIZE+1;
     unsigned char *zl = zmalloc(bytes);
+    // 将当前长度存入头中
     ZIPLIST_BYTES(zl) = intrev32ifbe(bytes);
+    // list 尾部到头的距离
     ZIPLIST_TAIL_OFFSET(zl) = intrev32ifbe(ZIPLIST_HEADER_SIZE);
     ZIPLIST_LENGTH(zl) = 0;
     zl[bytes-1] = ZIP_END;
@@ -740,6 +751,7 @@ unsigned char *__ziplistDelete(unsigned char *zl, unsigned char *p, unsigned int
 }
 
 /* Insert item at "p". */
+// p 为插入位置
 unsigned char *__ziplistInsert(unsigned char *zl, unsigned char *p, unsigned char *s, unsigned int slen) {
     size_t curlen = intrev32ifbe(ZIPLIST_BYTES(zl)), reqlen;
     unsigned int prevlensize, prevlen = 0;
@@ -752,7 +764,9 @@ unsigned char *__ziplistInsert(unsigned char *zl, unsigned char *p, unsigned cha
     zlentry tail;
 
     /* Find out prevlen for the entry that is inserted. */
+    // 插入位置在列表头
     if (p[0] != ZIP_END) {
+        // 从中可以看出 entry 的结构并不是真正存到内存中的结构
         ZIP_DECODE_PREVLEN(p, prevlensize, prevlen);
     } else {
         unsigned char *ptail = ZIPLIST_ENTRY_TAIL(zl);
@@ -762,7 +776,11 @@ unsigned char *__ziplistInsert(unsigned char *zl, unsigned char *p, unsigned cha
     }
 
     /* See if the entry can be encoded */
+    // encoding 存储编码格式
+    // value 存储被转换的值
     if (zipTryEncoding(s,slen,&value,&encoding)) {
+        // 可以被 encoding
+        // reqlen 存储长度
         /* 'encoding' is set to the appropriate integer encoding */
         reqlen = zipIntSize(encoding);
     } else {
@@ -772,6 +790,7 @@ unsigned char *__ziplistInsert(unsigned char *zl, unsigned char *p, unsigned cha
     }
     /* We need space for both the length of the previous entry and
      * the length of the payload. */
+    // reqlen = 上一节点的存储struct的字节数+encoding size + 输入的长度
     reqlen += zipStorePrevEntryLength(NULL,prevlen);
     reqlen += zipStoreEntryEncoding(NULL,encoding,slen);
 
@@ -953,6 +972,10 @@ unsigned char *ziplistMerge(unsigned char **first, unsigned char **second) {
     return target;
 }
 
+// zl 被插入的 ziplist
+// s 表示被插入的 string
+// slen 长度
+// where 是位置
 unsigned char *ziplistPush(unsigned char *zl, unsigned char *s, unsigned int slen, int where) {
     unsigned char *p;
     p = (where == ZIPLIST_HEAD) ? ZIPLIST_ENTRY_HEAD(zl) : ZIPLIST_ENTRY_END(zl);
