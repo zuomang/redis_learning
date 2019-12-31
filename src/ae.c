@@ -64,10 +64,13 @@ aeEventLoop *aeCreateEventLoop(int setsize) {
     aeEventLoop *eventLoop;
     int i;
 
-    if ((eventLoop = zmalloc(sizeof(*eventLoop))) == NULL) goto err;
+    if ((eventLoop = zmalloc(sizeof(*eventLoop))) == NULL)
+        goto err;
     eventLoop->events = zmalloc(sizeof(aeFileEvent)*setsize);
     eventLoop->fired = zmalloc(sizeof(aeFiredEvent)*setsize);
-    if (eventLoop->events == NULL || eventLoop->fired == NULL) goto err;
+    
+    if (eventLoop->events == NULL || eventLoop->fired == NULL)
+        goto err;
     eventLoop->setsize = setsize;
     eventLoop->lastTime = time(NULL);
     eventLoop->timeEventHead = NULL;
@@ -76,9 +79,13 @@ aeEventLoop *aeCreateEventLoop(int setsize) {
     eventLoop->maxfd = -1;
     eventLoop->beforesleep = NULL;
     eventLoop->aftersleep = NULL;
-    if (aeApiCreate(eventLoop) == -1) goto err;
+
+    if (aeApiCreate(eventLoop) == -1)
+        goto err;
+
     /* Events with mask == AE_NONE are not set. So let's initialize the
      * vector with it. */
+    // 将所有的 event 标记为 未设置
     for (i = 0; i < setsize; i++)
         eventLoop->events[i].mask = AE_NONE;
     return eventLoop;
@@ -133,6 +140,7 @@ void aeStop(aeEventLoop *eventLoop) {
     eventLoop->stop = 1;
 }
 
+// server.el, server.ipfd[j], AE_READABLE, acceptTcpHandler,NULL
 int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
         aeFileProc *proc, void *clientData)
 {
@@ -142,14 +150,21 @@ int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
     }
     aeFileEvent *fe = &eventLoop->events[fd];
 
+    // 添加到 epoll 事件监听
     if (aeApiAddEvent(eventLoop, fd, mask) == -1)
         return AE_ERR;
+    
     fe->mask |= mask;
-    if (mask & AE_READABLE) fe->rfileProc = proc;
-    if (mask & AE_WRITABLE) fe->wfileProc = proc;
+    if (mask & AE_READABLE) 
+        fe->rfileProc = proc;
+    if (mask & AE_WRITABLE) 
+        fe->wfileProc = proc;
+
     fe->clientData = clientData;
+
     if (fd > eventLoop->maxfd)
         eventLoop->maxfd = fd;
+
     return AE_OK;
 }
 
@@ -205,6 +220,7 @@ static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms) 
     *ms = when_ms;
 }
 
+// server.el, 1, serverCron, NULL, NULL
 long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
         aeTimeProc *proc, void *clientData,
         aeEventFinalizerProc *finalizerProc)
@@ -355,6 +371,12 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
  * the events that's possible to process without to wait are processed.
  *
  * The function returns the number of events processed. */
+// eventLoop, AE_ALL_EVENTS|AE_CALL_AFTER_SLEEP
+// #define AE_FILE_EVENTS 1
+// #define AE_TIME_EVENTS 2
+// #define AE_ALL_EVENTS (AE_FILE_EVENTS|AE_TIME_EVENTS)
+// #define AE_DONT_WAIT 4
+// #define AE_CALL_AFTER_SLEEP 8
 int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 {
     int processed = 0, numevents;

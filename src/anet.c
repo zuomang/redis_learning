@@ -462,6 +462,7 @@ static int anetV6Only(char *err, int s) {
     return ANET_OK;
 }
 
+// server.neterr,port,NULL,AF_INET,server.tcp_backlog
 static int _anetTcpServer(char *err, int port, char *bindaddr, int af, int backlog)
 {
     int s = -1, rv;
@@ -500,6 +501,7 @@ end:
     return s;
 }
 
+// server.neterr,port,NULL,server.tcp_backlog
 int anetTcpServer(char *err, int port, char *bindaddr, int backlog)
 {
     return _anetTcpServer(err, port, bindaddr, AF_INET, backlog);

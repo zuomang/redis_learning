@@ -36,22 +36,36 @@ typedef struct aeApiState {
     struct epoll_event *events;
 } aeApiState;
 
-static int aeApiCreate(aeEventLoop *eventLoop) {
-    aeApiState *state = zmalloc(sizeof(aeApiState));
+// eventLoop {
+//  apidata: state
+// }
 
-    if (!state) return -1;
+// apistate {
+//     epfd: epoll_create(1024),
+//     events: epoll event[]
+// }
+static int aeApiCreate(aeEventLoop *eventLoop) {
+    // 为 API state 动态分配空间
+    aeApiState *state = zmalloc(sizeof(aeApiState));
+    if (!state)
+        return -1;
+
+    // 为 epoll event 动态分配空间
     state->events = zmalloc(sizeof(struct epoll_event)*eventLoop->setsize);
     if (!state->events) {
         zfree(state);
         return -1;
     }
+
     state->epfd = epoll_create(1024); /* 1024 is just a hint for the kernel */
     if (state->epfd == -1) {
         zfree(state->events);
         zfree(state);
         return -1;
     }
+
     eventLoop->apidata = state;
+
     return 0;
 }
 
