@@ -857,6 +857,9 @@ void loadServerConfig(char *filename, char *options) {
         config = sdscat(config,"\n");
         config = sdscat(config,options);
     }
+
+    // 上一步将配置文件 load 进 cofing 字符串，并且将附加的 option 也存入到 config 中
+    // 根据配置按行设置对应的 server 属性    
     loadServerConfigFromString(config);
     sdsfree(config);
 }

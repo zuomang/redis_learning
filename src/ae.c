@@ -64,10 +64,13 @@ aeEventLoop *aeCreateEventLoop(int setsize) {
     aeEventLoop *eventLoop;
     int i;
 
-    if ((eventLoop = zmalloc(sizeof(*eventLoop))) == NULL) goto err;
+    if ((eventLoop = zmalloc(sizeof(*eventLoop))) == NULL)
+        goto err;
     eventLoop->events = zmalloc(sizeof(aeFileEvent)*setsize);
     eventLoop->fired = zmalloc(sizeof(aeFiredEvent)*setsize);
-    if (eventLoop->events == NULL || eventLoop->fired == NULL) goto err;
+    
+    if (eventLoop->events == NULL || eventLoop->fired == NULL)
+        goto err;
     eventLoop->setsize = setsize;
     eventLoop->lastTime = time(NULL);
     eventLoop->timeEventHead = NULL;
@@ -76,9 +79,13 @@ aeEventLoop *aeCreateEventLoop(int setsize) {
     eventLoop->maxfd = -1;
     eventLoop->beforesleep = NULL;
     eventLoop->aftersleep = NULL;
-    if (aeApiCreate(eventLoop) == -1) goto err;
+
+    if (aeApiCreate(eventLoop) == -1)
+        goto err;
+
     /* Events with mask == AE_NONE are not set. So let's initialize the
      * vector with it. */
+    // 将所有的 event 标记为 未设置
     for (i = 0; i < setsize; i++)
         eventLoop->events[i].mask = AE_NONE;
     return eventLoop;
@@ -133,23 +140,32 @@ void aeStop(aeEventLoop *eventLoop) {
     eventLoop->stop = 1;
 }
 
+// server.el, server.ipfd[j], AE_READABLE, acceptTcpHandler,NULL
 int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
         aeFileProc *proc, void *clientData)
 {
+    // 超出了监听文件大小，出错
     if (fd >= eventLoop->setsize) {
         errno = ERANGE;
         return AE_ERR;
     }
     aeFileEvent *fe = &eventLoop->events[fd];
 
+    // 添加到 epoll 事件监听
     if (aeApiAddEvent(eventLoop, fd, mask) == -1)
         return AE_ERR;
+    
     fe->mask |= mask;
-    if (mask & AE_READABLE) fe->rfileProc = proc;
-    if (mask & AE_WRITABLE) fe->wfileProc = proc;
+    if (mask & AE_READABLE) 
+        fe->rfileProc = proc;
+    if (mask & AE_WRITABLE) 
+        fe->wfileProc = proc;
+
     fe->clientData = clientData;
+
     if (fd > eventLoop->maxfd)
         eventLoop->maxfd = fd;
+
     return AE_OK;
 }
 
@@ -205,6 +221,7 @@ static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms) 
     *ms = when_ms;
 }
 
+// server.el, 1, serverCron, NULL, NULL
 long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
         aeTimeProc *proc, void *clientData,
         aeEventFinalizerProc *finalizerProc)
@@ -251,6 +268,10 @@ int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id)
  *    Much better but still insertion or deletion of timers is O(N).
  * 2) Use a skiplist to have this operation as O(1) and insertion as O(log(N)).
  */
+// 函数可以确定有多少时间可以执行 select 而不 delay 任何事件
+// 因为当前 events 没有排序，时间复杂度为 O(N)
+// 尽量将事件按顺序插入，保证最近的前面，但是时间复杂度并没有改变
+// 使用跳表，查找 O(1) ，插入 O(log(N))
 static aeTimeEvent *aeSearchNearestTimer(aeEventLoop *eventLoop)
 {
     aeTimeEvent *te = eventLoop->timeEventHead;
@@ -355,6 +376,12 @@ static int processTimeEvents(aeEventLoop *eventLoop) {
  * the events that's possible to process without to wait are processed.
  *
  * The function returns the number of events processed. */
+// eventLoop, AE_ALL_EVENTS|AE_CALL_AFTER_SLEEP
+// #define AE_FILE_EVENTS 1
+// #define AE_TIME_EVENTS 2
+// #define AE_ALL_EVENTS (AE_FILE_EVENTS|AE_TIME_EVENTS)
+// #define AE_DONT_WAIT 4
+// #define AE_CALL_AFTER_SLEEP 8
 int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 {
     int processed = 0, numevents;
@@ -408,6 +435,7 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
 
         /* Call the multiplexing API, will return only on timeout or when
          * some event fires. */
+        // 获取当前事件数
         numevents = aeApiPoll(eventLoop, tvp);
 
         /* After sleep callback. */
@@ -431,6 +459,8 @@ int aeProcessEvents(aeEventLoop *eventLoop, int flags)
              * This is useful when, for instance, we want to do things
              * in the beforeSleep() hook, like fsynching a file to disk,
              * before replying to a client. */
+            // 通常我们先执行可读事件，然后执行可写事件。可以在处理了查询后，立即处理回复
+            // 但是如果在 mask 中设置了 AE_BARRIER，应用 readable 事件后，绝对不会 fire write event
             int invert = fe->mask & AE_BARRIER;
 
             /* Note the "fe->mask & mask & ..." code: maybe an already
@@ -495,6 +525,7 @@ int aeWait(int fd, int mask, long long milliseconds) {
 
 void aeMain(aeEventLoop *eventLoop) {
     eventLoop->stop = 0;
+    // 开始执行事件循环
     while (!eventLoop->stop) {
         if (eventLoop->beforesleep != NULL)
             eventLoop->beforesleep(eventLoop);

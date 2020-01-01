@@ -59,11 +59,14 @@
  * Note that even when dict_can_resize is set to 0, not all resizes are
  * prevented: a hash table is still allowed to grow if the ratio between
  * the number of elements and the buckets > dict_force_resize_ratio. */
+// 当 dict_can_resize = 0 时，禁止 dict rehash
+// 即使 dict_can_resize = 0 时，也并不是所有的 resize 被组织，
+// 比如当 load factors >= dict_force_resize_ratio
 static int dict_can_resize = 1;
 static unsigned int dict_force_resize_ratio = 5;
 
 /* -------------------------- private prototypes ---------------------------- */
-
+// 私有的一些方法，供 dict 内部使用
 static int _dictExpandIfNeeded(dict *ht);
 static unsigned long _dictNextPower(unsigned long size);
 static long _dictKeyIndex(dict *ht, const void *key, uint64_t hash, dictEntry **existing);
@@ -71,12 +74,15 @@ static int _dictInit(dict *ht, dictType *type, void *privDataPtr);
 
 /* -------------------------- hash functions -------------------------------- */
 
+// unsigned int 数组，长度 16
 static uint8_t dict_hash_function_seed[16];
 
+// 将 seed 参数的数组，复制到 dict_hash_function_seed
 void dictSetHashFunctionSeed(uint8_t *seed) {
     memcpy(dict_hash_function_seed,seed,sizeof(dict_hash_function_seed));
 }
 
+// get function for dict_hash_function_seed
 uint8_t *dictGetHashFunctionSeed(void) {
     return dict_hash_function_seed;
 }
@@ -136,10 +142,12 @@ int dictResize(dict *d)
 {
     int minimal;
 
+    // 当 resize 禁止 或者 正在 rehashing 时，返回出错
     if (!dict_can_resize || dictIsRehashing(d)) return DICT_ERR;
     minimal = d->ht[0].used;
     if (minimal < DICT_HT_INITIAL_SIZE)
         minimal = DICT_HT_INITIAL_SIZE;
+    // 调用 dictExpand resize, 最小为 4，或者当前 used
     return dictExpand(d, minimal);
 }
 
@@ -148,13 +156,17 @@ int dictExpand(dict *d, unsigned long size)
 {
     /* the size is invalid if it is smaller than the number of
      * elements already inside the hash table */
+    // 当禁止或者当前 used > 希望 resize 大小
     if (dictIsRehashing(d) || d->ht[0].used > size)
         return DICT_ERR;
 
     dictht n; /* the new hash table */
+    // resize 的大小一定是 4*2^n > size
     unsigned long realsize = _dictNextPower(size);
 
     /* Rehashing to the same table size is not useful. */
+    // 因为上一行，real size 并不一定是 size parameter
+    // 因此 real size  可能等于当前的 size，就不会 rehashing
     if (realsize == d->ht[0].size) return DICT_ERR;
 
     /* Allocate the new hash table and initialize all pointers to NULL */
@@ -165,12 +177,14 @@ int dictExpand(dict *d, unsigned long size)
 
     /* Is this the first initialization? If so it's not really a rehashing
      * we just set the first hash table so that it can accept keys. */
+    // 初始化 dict，而不是 rehashing
     if (d->ht[0].table == NULL) {
         d->ht[0] = n;
         return DICT_OK;
     }
 
     /* Prepare a second hash table for incremental rehashing */
+    // rehashing
     d->ht[1] = n;
     d->rehashidx = 0;
     return DICT_OK;
@@ -185,7 +199,11 @@ int dictExpand(dict *d, unsigned long size)
  * guaranteed that this function will rehash even a single bucket, since it
  * will visit at max N*10 empty buckets in total, otherwise the amount of
  * work it does would be unbound and the function may block for a long time. */
+// 执行第 N 步增量式 rehashing
+// 返回 1 表示，任然后 key 需要 move 到 new hash table
+// 没有，则返回 0
 int dictRehash(dict *d, int n) {
+    // 最大的空 bucket visit 数
     int empty_visits = n*10; /* Max number of empty buckets to visit. */
     if (!dictIsRehashing(d)) return 0;
 
@@ -194,6 +212,7 @@ int dictRehash(dict *d, int n) {
 
         /* Note that rehashidx can't overflow as we are sure there are more
          * elements because ht[0].used != 0 */
+        // 当前 rehash 的字典表的索引
         assert(d->ht[0].size > (unsigned long)d->rehashidx);
         while(d->ht[0].table[d->rehashidx] == NULL) {
             d->rehashidx++;
@@ -230,6 +249,11 @@ int dictRehash(dict *d, int n) {
     return 1;
 }
 
+// timeval {
+// __time_t tv_sec;
+// __suseconds_t tv_usec;
+// }
+// tv_sec + tv_usec 的前三位
 long long timeInMilliseconds(void) {
     struct timeval tv;
 
@@ -238,6 +262,7 @@ long long timeInMilliseconds(void) {
 }
 
 /* Rehash for an amount of time between ms milliseconds and ms+1 milliseconds */
+// 毫秒内做 rehash
 int dictRehashMilliseconds(dict *d, int ms) {
     long long start = timeInMilliseconds();
     int rehashes = 0;
@@ -257,15 +282,20 @@ int dictRehashMilliseconds(dict *d, int ms) {
  * This function is called by common lookup or update operations in the
  * dictionary so that the hash table automatically migrates from H1 to H2
  * while it is actively used. */
+// 只做 1 step rehashing，仅仅在当前 dict 没有 iterators 时执行
 static void _dictRehashStep(dict *d) {
     if (d->iterators == 0) dictRehash(d,1);
 }
 
 /* Add an element to the target hash table */
+// 填加一个 k-v 到字典
+// 如果 key 存在，则返回出错
+// 如果 key 不存在，则设置对应的 k-v，然后 true
 int dictAdd(dict *d, void *key, void *val)
 {
     dictEntry *entry = dictAddRaw(d,key,NULL);
 
+    // 将新的 entry 对象设置对应的 value
     if (!entry) return DICT_ERR;
     dictSetVal(d, entry, val);
     return DICT_OK;
@@ -289,16 +319,21 @@ int dictAdd(dict *d, void *key, void *val)
  *
  * If key was added, the hash entry is returned to be manipulated by the caller.
  */
+// 如果存在 key，函数返回值为新的 entry，existing 为旧的对象
+// 如果不存在，返回 NULL
 dictEntry *dictAddRaw(dict *d, void *key, dictEntry **existing)
 {
     long index;
     dictEntry *entry;
     dictht *ht;
 
+    // 尝试执行 1 step rehashing
     if (dictIsRehashing(d)) _dictRehashStep(d);
 
     /* Get the index of the new element, or -1 if
      * the element already exists. */
+    // 有，_dictKeyIndex 返回 -1，函数返回 NULL
+    // 没有，_dictKeyIndex 返回 index，函数返回新的 key
     if ((index = _dictKeyIndex(d, key, dictHashKey(d,key), existing)) == -1)
         return NULL;
 
@@ -961,6 +996,8 @@ static unsigned long _dictNextPower(unsigned long size)
  *
  * Note that if we are in the process of rehashing the hash table, the
  * index is always returned in the context of the second (new) hash table. */
+// 如果 key 存在，则返回 -1, 可选的输出
+// 如果 key 不存在，则返回索引值
 static long _dictKeyIndex(dict *d, const void *key, uint64_t hash, dictEntry **existing)
 {
     unsigned long idx, table;

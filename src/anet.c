@@ -64,6 +64,8 @@ int anetSetBlock(char *err, int fd, int non_block) {
     /* Set the socket blocking (if non_block is zero) or non-blocking.
      * Note that fcntl(2) for F_GETFL and F_SETFL can't be
      * interrupted by a signal. */
+    // 设置 IO 是否阻塞，redis 中通常采用非阻塞 IO
+    // 调用 fcntl 执行这些操作
     if ((flags = fcntl(fd, F_GETFL)) == -1) {
         anetSetError(err, "fcntl(F_GETFL): %s", strerror(errno));
         return ANET_ERR;
@@ -92,6 +94,9 @@ int anetBlock(char *err, int fd) {
 /* Set TCP keep alive option to detect dead peers. The interval option
  * is only used for Linux as we are using Linux-specific APIs to set
  * the probe send time, interval, and count. */
+// 设置 TCP  keep alive 选项，检查死亡节点
+// 因为我们使用了Linux指定的 API，因此 interva option 仅仅适用于 Linux，
+// 去设置 probe 发送时间，间隔，次数
 int anetKeepAlive(char *err, int fd, int interval)
 {
     int val = 1;
@@ -106,8 +111,10 @@ int anetKeepAlive(char *err, int fd, int interval)
     /* Default settings are more or less garbage, with the keepalive time
      * set to 7200 by default on Linux. Modify settings to make the feature
      * actually useful. */
+    // 默认的设置 7200 或多或少比较垃圾，修改设置，是这个 feature 真正可用
 
     /* Send first probe after interval. */
+    // 过了 interval 发送第一个谭政
     val = interval;
     if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val)) < 0) {
         anetSetError(err, "setsockopt TCP_KEEPIDLE: %s\n", strerror(errno));
@@ -118,7 +125,8 @@ int anetKeepAlive(char *err, int fd, int interval)
      * delay as interval / 3, as we send three probes before detecting
      * an error (see the next setsockopt call). */
     val = interval/3;
-    if (val == 0) val = 1;
+    if (val == 0) 
+        val = 1;
     if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val)) < 0) {
         anetSetError(err, "setsockopt TCP_KEEPINTVL: %s\n", strerror(errno));
         return ANET_ERR;
@@ -462,6 +470,7 @@ static int anetV6Only(char *err, int s) {
     return ANET_OK;
 }
 
+// server.neterr,port,NULL,AF_INET,server.tcp_backlog
 static int _anetTcpServer(char *err, int port, char *bindaddr, int af, int backlog)
 {
     int s = -1, rv;
@@ -500,6 +509,7 @@ end:
     return s;
 }
 
+// server.neterr,port,NULL,server.tcp_backlog
 int anetTcpServer(char *err, int port, char *bindaddr, int backlog)
 {
     return _anetTcpServer(err, port, bindaddr, AF_INET, backlog);
@@ -554,12 +564,16 @@ int anetTcpAccept(char *err, int s, char *ip, size_t ip_len, int *port) {
 
     if (sa.ss_family == AF_INET) {
         struct sockaddr_in *s = (struct sockaddr_in *)&sa;
-        if (ip) inet_ntop(AF_INET,(void*)&(s->sin_addr),ip,ip_len);
-        if (port) *port = ntohs(s->sin_port);
+        if (ip)
+            inet_ntop(AF_INET,(void*)&(s->sin_addr),ip,ip_len);
+        if (port) 
+            *port = ntohs(s->sin_port);
     } else {
         struct sockaddr_in6 *s = (struct sockaddr_in6 *)&sa;
-        if (ip) inet_ntop(AF_INET6,(void*)&(s->sin6_addr),ip,ip_len);
-        if (port) *port = ntohs(s->sin6_port);
+        if (ip) 
+            inet_ntop(AF_INET6,(void*)&(s->sin6_addr),ip,ip_len);
+        if (port) 
+            *port = ntohs(s->sin6_port);
     }
     return fd;
 }

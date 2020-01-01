@@ -36,22 +36,36 @@ typedef struct aeApiState {
     struct epoll_event *events;
 } aeApiState;
 
-static int aeApiCreate(aeEventLoop *eventLoop) {
-    aeApiState *state = zmalloc(sizeof(aeApiState));
+// eventLoop {
+//  apidata: state
+// }
 
-    if (!state) return -1;
+// apistate {
+//     epfd: epoll_create(1024),
+//     events: epoll event[]
+// }
+static int aeApiCreate(aeEventLoop *eventLoop) {
+    // 为 API state 动态分配空间
+    aeApiState *state = zmalloc(sizeof(aeApiState));
+    if (!state)
+        return -1;
+
+    // 为 epoll event 动态分配空间
     state->events = zmalloc(sizeof(struct epoll_event)*eventLoop->setsize);
     if (!state->events) {
         zfree(state);
         return -1;
     }
+
     state->epfd = epoll_create(1024); /* 1024 is just a hint for the kernel */
     if (state->epfd == -1) {
         zfree(state->events);
         zfree(state);
         return -1;
     }
+
     eventLoop->apidata = state;
+
     return 0;
 }
 
@@ -105,6 +119,8 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
     }
 }
 
+// 执行一个 epoll select 操作，将触发的所有事件存入到 fired 列表
+// 存储对应的文件描述符，以及事件类型 AE_READABLE || AE_WRITABLE
 static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     aeApiState *state = eventLoop->apidata;
     int retval, numevents = 0;
@@ -119,6 +135,9 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
             int mask = 0;
             struct epoll_event *e = state->events+j;
 
+            // EPOLLIN 需要读取数据的情况呢
+            // EPOLLOUT 输出缓冲为空，可以立即发送你数据的情况呢
+            // EPOLLERR 发生错误的情况
             if (e->events & EPOLLIN) mask |= AE_READABLE;
             if (e->events & EPOLLOUT) mask |= AE_WRITABLE;
             if (e->events & EPOLLERR) mask |= AE_WRITABLE;

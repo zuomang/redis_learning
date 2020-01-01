@@ -443,9 +443,17 @@ int getMaxmemoryState(size_t *total, size_t *logical, size_t *tofree, float *lev
  * were over the limit, but the attempt to free memory was successful.
  * Otehrwise if we are over the memory limit, but not enough memory
  * was freed to return back under the limit, the function returns C_ERR. */
+// 这个函数将周期地被执行，如果根据 maxmemory 设置，有内存可以被释放
+// 如果超过内存的限制，这个函数将会尝试释放内存，让 server 回到内存限制
+
+// 如果在内存限制内，或者成功地尝试回收内存，返回 OK
+// 相反如果超过内存限制，没有足够的内存释放，返回 ERR
+
+// todo
 int freeMemoryIfNeeded(void) {
     /* By default slaves should ignore maxmemory and just be masters excat
      * copies. */
+    // 从服务器忽略最大内存，仅仅只是作为主服务器的精确副本
     if (server.masterhost && server.repl_slave_ignore_maxmemory) return C_OK;
 
     size_t mem_reported, mem_tofree, mem_freed;
