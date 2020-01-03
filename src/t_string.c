@@ -84,11 +84,16 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
         return;
     }
     setKey(c->db,key,val);
-    server.dirty++;
-    if (expire) setExpire(c,c->db,key,mstime()+milliseconds);
+    server.dirty++; // dirty 计数器加1，为了 RDB save
+    if (expire) 
+        setExpire(c,c->db,key,mstime()+milliseconds);
+
     notifyKeyspaceEvent(NOTIFY_STRING,"set",key,c->db->id);
-    if (expire) notifyKeyspaceEvent(NOTIFY_GENERIC,
+
+    if (expire) 
+        notifyKeyspaceEvent(NOTIFY_GENERIC,
         "expire",key,c->db->id);
+    
     addReply(c, ok_reply ? ok_reply : shared.ok);
 }
 
@@ -99,6 +104,7 @@ void setCommand(client *c) {
     int unit = UNIT_SECONDS;
     int flags = OBJ_SET_NO_FLAGS;
 
+    // 处理一些额外的参数，过期时间等等
     for (j = 3; j < c->argc; j++) {
         char *a = c->argv[j]->ptr;
         robj *next = (j == c->argc-1) ? NULL : c->argv[j+1];

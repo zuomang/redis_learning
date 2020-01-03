@@ -1723,6 +1723,7 @@ void initServerConfig(void) {
      * (single commands executed by the script), and not by sending the
      * script to the slave / AOF. This is the new way starting from
      * Redis 5. However it is possible to revert it via redis.conf. */
+    // 默认情况下，我们希望脚本始终通过效果（脚本执行的单个命令）进行复制，而不是通过将脚本发送至从属/ AOF进行复制
     server.lua_always_replicate_commands = 1;
 }
 
@@ -2442,6 +2443,8 @@ void call(client *c, int flags) {
 
     /* Sent the command to clients in MONITOR mode, only if the commands are
      * not generated from reading an AOF. */
+    // 当当前server有 monitor，并且没有 db loading，执行的命令不是被标记 跳过monitor 和 admin相关命令时
+    // 将这些执行的命令发送到所有的 monitor
     if (listLength(server.monitors) &&
         !server.loading &&
         !(c->cmd->flags & (CMD_SKIP_MONITOR|CMD_ADMIN)))
@@ -2451,11 +2454,13 @@ void call(client *c, int flags) {
 
     /* Initialization: clear the flags that must be set by the command on
      * demand, and initialize the array for additional commands propagation. */
+    // 将 client 的 CLIENT_FORCE_AOF|CLIENT_FORCE_REPL|CLIENT_PREVENT_PROP 清除
     c->flags &= ~(CLIENT_FORCE_AOF|CLIENT_FORCE_REPL|CLIENT_PREVENT_PROP);
     redisOpArray prev_also_propagate = server.also_propagate;
     redisOpArrayInit(&server.also_propagate);
 
     /* Call the command. */
+    // 执行命令
     dirty = server.dirty;
     start = ustime();
     c->cmd->proc(c);
@@ -2465,6 +2470,8 @@ void call(client *c, int flags) {
 
     /* When EVAL is called loading the AOF we don't want commands called
      * from Lua to go into the slowlog or to populate statistics. */
+    // 当 server 真正在 loading，并且 client 是 lua
+    // 不希望 lua 的 command 被记录到 slowlog 和 stats
     if (server.loading && c->flags & CLIENT_LUA)
         flags &= ~(CMD_CALL_SLOWLOG | CMD_CALL_STATS);
 
@@ -2622,8 +2629,8 @@ int processCommand(client *c) {
      * However we don't perform the redirection if:
      * 1) The sender of this command is our master.
      * 2) The command has no key arguments. */
-    // 如果 cluster 被 enable，在这里执行 cluster redirection
-    // 不会被执行 redirect
+    // 如果 cluster 被 enable，在这里执行命令相关的重定向
+    // 不会被执行 redirect的情况如下
     // 1. command 的 sender 是 master
     // 2. command 没有 key 参数
     if (server.cluster_enabled &&
@@ -2722,6 +2729,7 @@ int processCommand(client *c) {
     }
 
     /* Only allow SUBSCRIBE and UNSUBSCRIBE in the context of Pub/Sub */
+    // 当 client 是订阅模式时，只允许订阅相关的命令执行
     if (c->flags & CLIENT_PUBSUB &&
         c->cmd->proc != pingCommand &&
         c->cmd->proc != subscribeCommand &&
@@ -2746,6 +2754,7 @@ int processCommand(client *c) {
 
     /* Loading DB? Return an error if the command has not the
      * CMD_LOADING flag. */
+    // 当 server 正在 loading RDB 文件时，禁止某些命令
     if (server.loading && !(c->cmd->flags & CMD_LOADING)) {
         addReply(c, shared.loadingerr);
         return C_OK;

@@ -555,6 +555,8 @@ void getRandomBytes(unsigned char *p, size_t len) {
          * the same seed with a progressive counter. For the goals of this
          * function we just need non-colliding strings, there are no
          * cryptographic security needs. */
+        // 先尝试使用 /urandom 来初始化 seed
+        // 不行的话，使用自定义的策略
         FILE *fp = fopen("/dev/urandom","r");
         if (fp == NULL || fread(seed,sizeof(seed),1,fp) != 1) {
             /* Revert to a weaker seed, and in this case reseed again

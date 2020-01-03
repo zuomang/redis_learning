@@ -207,6 +207,9 @@ void dbOverwrite(redisDb *db, robj *key, robj *val) {
  * 3) The expire time of the key is reset (the key is made persistent).
  *
  * All the new keys in the database should be craeted via this interface. */
+// high level set 操作，被用来设置一个 key，无论他是否存在
+// 1. 增加一个引用
+// 2. 通知 watch 的 key
 void setKey(redisDb *db, robj *key, robj *val) {
     if (lookupKeyWrite(db,key) == NULL) {
         dbAdd(db,key,val);
