@@ -349,6 +349,8 @@ unsigned long LFUDecrAndReturn(robj *o) {
 /* We don't want to count AOF buffers and slaves output buffers as
  * used memory: the eviction should use mostly data size. This function
  * returns the sum of AOF and slaves buffer. */
+// 不将 AOF buffer 和 slave output buffer 作为已使用的内存
+// 这个 function 返回 AOF 和 slave 的 buffer 和
 size_t freeMemoryGetNotCountedMemory(void) {
     size_t overhead = 0;
     int slaves = listLength(server.slaves);
@@ -407,6 +409,7 @@ int getMaxmemoryState(size_t *total, size_t *logical, size_t *tofree, float *lev
 
     /* Remove the size of slaves output buffers and AOF buffer from the
      * count of used memory. */
+    // mem_used 为 malloc 分配的减去一些不需要的
     mem_used = mem_reported;
     size_t overhead = freeMemoryGetNotCountedMemory();
     mem_used = (mem_used > overhead) ? mem_used-overhead : 0;
@@ -464,7 +467,9 @@ int freeMemoryIfNeeded(void) {
     /* When clients are paused the dataset should be static not just from the
      * POV of clients not being able to write, but also from the POV of
      * expires and evictions of keys not being performed. */
-    if (clientsArePaused()) return C_OK;
+    if (clientsArePaused()) 
+        return C_OK;
+
     if (getMaxmemoryState(&mem_reported,NULL,&mem_tofree,NULL) == C_OK)
         return C_OK;
 
