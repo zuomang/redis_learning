@@ -1355,6 +1355,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
 /* This function gets called every time Redis is entering the
  * main loop of the event driven library, that is, before to sleep
  * for ready file descriptors. */
+// 这个方法在 redis 每次进入事件驱动循环被调用
 void beforeSleep(struct aeEventLoop *eventLoop) {
     UNUSED(eventLoop);
 
@@ -2462,7 +2463,7 @@ void call(client *c, int flags) {
     redisOpArrayInit(&server.also_propagate);
 
     /* Call the command. */
-    // 执行命令
+    // 执行命令，并且执行 key space notification
     dirty = server.dirty;
     start = ustime();
     c->cmd->proc(c);
@@ -2587,6 +2588,7 @@ int processCommand(client *c) {
     // 当 FORCE_REPLICATION 被 enable，并且在常规的命令中实现，将会造成麻烦
     if (!strcasecmp(c->argv[0]->ptr,"quit")) {
         addReply(c,shared.ok);
+        // 当接收到 quit command 后，将 client 标记为 close_after_reply
         c->flags |= CLIENT_CLOSE_AFTER_REPLY;
         return C_ERR;
     }
@@ -2598,6 +2600,7 @@ int processCommand(client *c) {
     // 如果无法找到，返回 NULL
     c->cmd = c->lastcmd = lookupCommand(c->argv[0]->ptr);
     if (!c->cmd) {
+        // 没有找到 command
         // 如果 flag == CLIENT_MULTI，添加一个 CLIENT_DIRTY_EXEC
         flagTransaction(c);
 

@@ -1298,7 +1298,7 @@ int processMultibulkBuffer(client *c) {
     char *newline = NULL;
     int ok;
     long long ll;
-
+    // multibulklen 表示当前的命令参数个数
     if (c->multibulklen == 0) {
         /* The client should have been reset */
         serverAssertWithInfo(c,NULL,c->argc == 0);
@@ -1444,12 +1444,12 @@ void processInputBuffer(client *c) {
     /* Keep processing while there is something in the input buffer */
     while(c->qb_pos < sdslen(c->querybuf)) {
         /* Return if clients are paused. */
-        // 如果 client 被暂停，返回
+        // 如果 client 不是来自 slave，并且现在 client 被暂停，break 当前循环
         if (!(c->flags & CLIENT_SLAVE) && clientsArePaused()) 
             break;
 
         /* Immediately abort if the client is in the middle of something. */
-        // 如果 client 当前被 block，跳出循环
+        // 如果当前 client 正在等待一些 block 命令
         if (c->flags & CLIENT_BLOCKED) 
             break;
 
@@ -1457,8 +1457,8 @@ void processInputBuffer(client *c) {
          * condition on the slave. We want just to accumulate the replication
          * stream (instead of replying -BUSY like we do with other clients) and
          * later resume the processing. */
-        // 不处理来自 master 的输入，当 slave 正在执行一个 busy 的脚本
-        // 我们只想累积复制流（而不是像对其他客户端那样答复-BUSY），然后再继续处理
+        // 当 slave 正在执行一个 busy 的脚本，暂时不处理来自 master 的输入
+        // 将 replication 数据积累起来，等下次再继续处理
         if (server.lua_timedout && c->flags & CLIENT_MASTER) 
             break;
 
@@ -1467,7 +1467,10 @@ void processInputBuffer(client *c) {
          * this flag has been set (i.e. don't process more commands).
          *
          * The same applies for clients we want to terminate ASAP. */
-        if (c->flags & (CLIENT_CLOSE_AFTER_REPLY|CLIENT_CLOSE_ASAP)) break;
+        // 当 client 被标记为 close_after_reply 或者 close_asap 不会在处理 client 请求
+        // 用于希望尽快的结束 client request
+        if (c->flags & (CLIENT_CLOSE_AFTER_REPLY|CLIENT_CLOSE_ASAP)) 
+            break;
 
         /* Determine request type when unknown. */
         // 决定 request 类型
@@ -1533,9 +1536,11 @@ void processInputBuffer(client *c) {
  * is flagged as master. Usually you want to call this instead of the
  * raw processInputBuffer(). */
 void processInputBufferAndReplicate(client *c) {
+    // 不是主从复制的 client
     if (!(c->flags & CLIENT_MASTER)) {
         processInputBuffer(c);
     } else {
+        // 对于 slave 来说，现在处理 replication 数据
         size_t prev_offset = c->reploff;
         processInputBuffer(c);
         size_t applied = c->reploff - prev_offset;
@@ -1576,14 +1581,17 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
         if (remaining > 0 && remaining < readlen) readlen = remaining;
     }
 
+    // 初始时，qblen 都为空
     qblen = sdslen(c->querybuf);
     if (c->querybuf_peak < qblen) 
         c->querybuf_peak = qblen;
 
+    // 将 querybuf 设置为 16kb
     c->querybuf = sdsMakeRoomFor(c->querybuf, readlen);
 
     // read 返回 -1，errno == EAGAIN 表示当前暂时没有数据可读
     // read 返回 0，表示 client 关闭了连接
+    // 因为当前的 socket 都是非阻塞的
     nread = read(fd, c->querybuf+qblen, readlen);
     if (nread == -1) {
         if (errno == EAGAIN) {
@@ -1611,13 +1619,14 @@ void readQueryFromClient(aeEventLoop *el, int fd, void *privdata, int mask) {
     sdsIncrLen(c->querybuf,nread);
     // 更新上一次交互时间
     c->lastinteraction = server.unixtime;
-    // 更新 reply offset
+    // 更新主从复制时，master 到 slave 连接中
+    // slave 已经读取的 replication offset
     if (c->flags & CLIENT_MASTER) 
         c->read_reploff += nread;
     // 更新 server 的 input network 流量
     server.stat_net_input_bytes += nread;
 
-    // 当服务器读入的 buf 大于最大缓冲，则关闭服务端
+    // 当服务器当前读入的 buf 大于最大缓冲，则关闭服务端
     if (sdslen(c->querybuf) > server.client_max_querybuf_len) {
         // catClientInfoString 返回一个 client info 的 string
         // 打印 warning log 关于 client info 和 query buf 的部分数据
