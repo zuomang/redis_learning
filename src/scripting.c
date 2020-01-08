@@ -910,6 +910,10 @@ void scriptingEnableGlobalsProtection(lua_State *lua) {
  * in order to reset the Lua scripting environment.
  *
  * However it is simpler to just call scriptingReset() that does just that. */
+// 初始化脚本环境
+// 这个 function 在服务器启动时，第一次调用，setup 参数为 1
+// 它可以在 redis 处理的声明周期中多次被调用，setup 参数设置为 0
+// ，接着一个 scriptingRelease call，重置 lua 环境
 void scriptingInit(int setup) {
     lua_State *lua = lua_open();
 
@@ -1252,6 +1256,7 @@ void luaMaskCountHook(lua_State *lua, lua_Debug *ar) {
     }
 }
 
+// evalGenericCommand(c,0); 
 void evalGenericCommand(client *c, int evalsha) {
     lua_State *lua = server.lua;
     char funcname[43];
@@ -1278,6 +1283,7 @@ void evalGenericCommand(client *c, int evalsha) {
     server.lua_repl = PROPAGATE_AOF|PROPAGATE_REPL;
 
     /* Get the number of arguments that are keys */
+    // 获取 key 的数量
     if (getLongLongFromObjectOrReply(c,c->argv[2],&numkeys,NULL) != C_OK)
         return;
     if (numkeys > (c->argc - 3)) {
@@ -1459,6 +1465,7 @@ void evalGenericCommand(client *c, int evalsha) {
 }
 
 void evalCommand(client *c) {
+    // 非 lua debug mode
     if (!(c->flags & CLIENT_LUA_DEBUG))
         evalGenericCommand(c,0);
     else

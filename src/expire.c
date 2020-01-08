@@ -51,12 +51,14 @@
  *
  * The parameter 'now' is the current time in milliseconds as is passed
  * to the function to avoid too many gettimeofday() syscalls. */
+//
 int activeExpireCycleTryExpire(redisDb *db, dictEntry *de, long long now) {
     long long t = dictGetSignedIntegerVal(de);
     if (now > t) {
         sds key = dictGetKey(de);
         robj *keyobj = createStringObject(key,sdslen(key));
 
+        //todo
         propagateExpire(db,keyobj,server.lazyfree_lazy_expire);
         if (server.lazyfree_lazy_expire)
             dbAsyncDelete(db,keyobj);
@@ -98,6 +100,7 @@ void activeExpireCycle(int type) {
     /* This function has some global state in order to continue the work
      * incrementally across calls. */
     static unsigned int current_db = 0; /* Last DB tested. */
+    // 在上一次调用时间超时
     static int timelimit_exit = 0;      /* Time limit hit in previous call? */
     static long long last_fast_cycle = 0; /* When last fast cycle ran. */
 
@@ -108,14 +111,17 @@ void activeExpireCycle(int type) {
     /* When clients are paused the dataset should be static not just from the
      * POV of clients not being able to write, but also from the POV of
      * expires and evictions of keys not being performed. */
-    if (clientsArePaused()) return;
+    if (clientsArePaused()) 
+        return;
 
     if (type == ACTIVE_EXPIRE_CYCLE_FAST) {
         /* Don't start a fast cycle if the previous cycle did not exit
          * for time limit. Also don't repeat a fast cycle for the same period
          * as the fast cycle total duration itself. */
-        if (!timelimit_exit) return;
-        if (start < last_fast_cycle + ACTIVE_EXPIRE_CYCLE_FAST_DURATION*2) return;
+        if (!timelimit_exit) 
+            return;
+        if (start < last_fast_cycle + ACTIVE_EXPIRE_CYCLE_FAST_DURATION*2) 
+            return;
         last_fast_cycle = start;
     }
 
@@ -126,6 +132,8 @@ void activeExpireCycle(int type) {
      * 2) If last time we hit the time limit, we want to scan all DBs
      * in this iteration, as there is work to do in some DB and we don't want
      * expired keys to use memory for too much time. */
+    // 不测试超出当前 dbs 数的 DB
+    // 如果上次我们达到了时间限制，则我们希望在此迭代中扫描所有数据库，因为某些数据库中有工作要做，并且我们不希望过期的键占用过多的内存。
     if (dbs_per_call > server.dbnum || timelimit_exit)
         dbs_per_call = server.dbnum;
 
@@ -174,6 +182,7 @@ void activeExpireCycle(int type) {
             /* When there are less than 1% filled slots getting random
              * keys is expensive, so stop here waiting for better times...
              * The dictionary will be resized asap. */
+            // 当只有百分之一的键 slot 被填充，获取一个随机key比较耗时，等待更好的机会
             if (num && slots > DICT_HT_INITIAL_SIZE &&
                 (num*100/slots < 1)) break;
 
@@ -190,7 +199,8 @@ void activeExpireCycle(int type) {
                 dictEntry *de;
                 long long ttl;
 
-                if ((de = dictGetRandomKey(db->expires)) == NULL) break;
+                if ((de = dictGetRandomKey(db->expires)) == NULL) 
+                    break;
                 ttl = dictGetSignedIntegerVal(de)-now;
                 if (activeExpireCycleTryExpire(db,de,now)) expired++;
                 if (ttl > 0) {
@@ -209,7 +219,8 @@ void activeExpireCycle(int type) {
                 /* Do a simple running average with a few samples.
                  * We just use the current estimate with a weight of 2%
                  * and the previous estimate with a weight of 98%. */
-                if (db->avg_ttl == 0) db->avg_ttl = avg_ttl;
+                if (db->avg_ttl == 0) 
+                    db->avg_ttl = avg_ttl;
                 db->avg_ttl = (db->avg_ttl/50)*49 + (avg_ttl/50);
             }
 

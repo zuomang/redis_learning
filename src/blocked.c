@@ -151,6 +151,7 @@ void processUnblockedClients(void) {
 void queueClientForReprocessing(client *c) {
     /* The client may already be into the unblocked list because of a previous
      * blocking operation, don't add back it into the list multiple times. */
+    // 如果 client 不是 unblocked，则将其设置为 unblocked, 并将其加入到 unblock client list
     if (!(c->flags & CLIENT_UNBLOCKED)) {
         c->flags |= CLIENT_UNBLOCKED;
         listAddNodeTail(server.unblocked_clients,c);

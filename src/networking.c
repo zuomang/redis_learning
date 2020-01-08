@@ -2244,6 +2244,7 @@ void pauseClients(mstime_t end) {
 
 /* Return non-zero if clients are currently paused. As a side effect the
  * function checks if the pause time was reached and clear it. */
+// 检查 client 的 pause 时间是否小于当前时间，如果小，则重置 client_paused 为 0
 int clientsArePaused(void) {
     if (server.clients_paused &&
         server.clients_pause_end_time < server.mstime)
@@ -2262,7 +2263,8 @@ int clientsArePaused(void) {
 
             /* Don't touch slaves and blocked clients.
              * The latter pending requests will be processed when unblocked. */
-            if (c->flags & (CLIENT_SLAVE|CLIENT_BLOCKED)) continue;
+            if (c->flags & (CLIENT_SLAVE|CLIENT_BLOCKED)) 
+                continue;
             queueClientForReprocessing(c);
         }
     }

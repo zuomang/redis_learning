@@ -643,6 +643,7 @@ void dictReleaseIterator(dictIterator *iter)
 
 /* Return a random entry from the hash table. Useful to
  * implement randomized algorithms */
+//todo
 dictEntry *dictGetRandomKey(dict *d)
 {
     dictEntry *he, *orighe;
