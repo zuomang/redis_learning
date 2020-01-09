@@ -2020,7 +2020,7 @@ void resetServerStats(void) {
     server.aof_delayed_fsync = 0;
 }
 
-void initServer(void) {
+void s(void) {
     int j;
 
     // SIGHUP和控制台操作有关
@@ -2473,14 +2473,17 @@ void call(client *c, int flags) {
 
     /* When EVAL is called loading the AOF we don't want commands called
      * from Lua to go into the slowlog or to populate statistics. */
+    // c->flags & CLIENT_LUA 这个条件表示，这个 client 是 server 为了执行 lua 命令创建的假的 client
     // 当 server 真正在 loading，并且 client 是 lua
-    // 不希望 lua 的 command 被记录到 slowlog 和 stats
+    // 不希望 lua 执行的 command 被记录到 slowlog 和 stats
     if (server.loading && c->flags & CLIENT_LUA)
         flags &= ~(CMD_CALL_SLOWLOG | CMD_CALL_STATS);
 
     /* If the caller is Lua, we want to force the EVAL caller to propagate
      * the script if the command flag or client flag are forcing the
      * propagation. */
+    // 如果 client 是 lua client，我们想要强制 EVAL 调用者传播脚本，
+    // 如果 command flag 或 client flag 强制传播
     if (c->flags & CLIENT_LUA && server.lua_caller) {
         if (c->flags & CLIENT_FORCE_REPL)
             server.lua_caller->flags |= CLIENT_FORCE_REPL;
@@ -2899,6 +2902,8 @@ int prepareForShutdown(int flags) {
  * DISK_ERROR_TYPE_AOF:     Don't accept writes: AOF errors.
  * DISK_ERROR_TYPE_RDB:     Don't accept writes: RDB errors.
  */
+// 有时 redis 无法接受写命令，因为 RDB 或 AOF 文件持久化错误，并且 redis 被
+// 配置这种场景下禁止写
 int writeCommandsDeniedByDiskError(void) {
     if (server.stop_writes_on_bgsave_err &&
         server.saveparamslen > 0 &&

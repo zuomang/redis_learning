@@ -103,6 +103,7 @@ void discardCommand(client *c) {
 
 /* Send a MULTI command to all the slaves and AOF file. Check the execCommand
  * implementation for more information. */
+// 传递一个 multi 事务开始命令给所有的 slave 和 aof
 void execCommandPropagateMulti(client *c) {
     robj *multistring = createStringObject("MULTI",5);
 

@@ -346,6 +346,7 @@ void luaReplyToRedisReply(client *c, lua_State *lua) {
 #define LUA_CMD_OBJCACHE_SIZE 32
 #define LUA_CMD_OBJCACHE_MAX_LEN 64
 int luaRedisGenericCommand(lua_State *lua, int raise_error) {
+    // 执行 lua redis.* command
     int j, argc = lua_gettop(lua);
     struct redisCommand *cmd;
     client *c = server.lua_client;
@@ -388,6 +389,8 @@ int luaRedisGenericCommand(lua_State *lua, int raise_error) {
     }
 
     /* Build the arguments vector */
+    // 将 call 或 pcall 函数的参数转换为对应的 client argc 和 argv
+    // 当参数比较少的时候，使用 lua cmd object cache 存储
     if (argv_size < argc) {
         argv = zrealloc(argv,sizeof(robj*)*argc);
         argv_size = argc;
@@ -427,6 +430,7 @@ int luaRedisGenericCommand(lua_State *lua, int raise_error) {
     /* Check if one of the arguments passed by the Lua script
      * is not a string or an integer (lua_isstring() return true for
      * integers as well). */
+    // 检查传递给 lua 函数的命令是否有不是 string 或 int 的
     if (j != argc) {
         j--;
         while (j >= 0) {
@@ -474,6 +478,7 @@ int luaRedisGenericCommand(lua_State *lua, int raise_error) {
     c->cmd = c->lastcmd = cmd;
 
     /* There are commands that are not allowed inside scripts. */
+    // 当 cmd 不允许在脚本中执行，则退出
     if (cmd->flags & CMD_NOSCRIPT) {
         luaPushError(lua, "This Redis command is not allowed from scripts");
         goto cleanup;
@@ -549,6 +554,12 @@ int luaRedisGenericCommand(lua_State *lua, int raise_error) {
     /* If we are using single commands replication, we need to wrap what
      * we propagate into a MULTI/EXEC block, so that it will be atomic like
      * a Lua script in the context of AOF and slaves. */
+    // 当使用 single command replication 时，将执行的命令包装成事务，这样就会在 AOF 和 slave 中原子执行
+    // lua_replicate_commands default 1
+    // lua_multi_emitted 为 0
+    // lua 的调用者没有开启事务，换句话 lua 并不在事务里面执行
+    // lua 脚本会改变 server
+    // lua 并没有被设置不传播
     if (server.lua_replicate_commands &&
         !server.lua_multi_emitted &&
         !(server.lua_caller->flags & CLIENT_MULTI) &&
@@ -854,6 +865,7 @@ void luaLoadLibraries(lua_State *lua) {
 
 /* Remove a functions that we don't want to expose to the Redis scripting
  * environment. */
+// 先将 nil 放入到 lua 的栈上，接着调用 lua 的 api 设置 loadfile 属性
 void luaRemoveUnsupportedFunctions(lua_State *lua) {
     lua_pushnil(lua);
     lua_setglobal(lua,"loadfile");
@@ -1370,10 +1382,13 @@ void evalGenericCommand(client *c, int evalsha) {
     /* At this point whether this script was never seen before or if it was
      * already defined, we can call it. We have zero arguments and expect
      * a single return value. */
+    // 无论脚本之前是否被定义过，在这里都可以执行
     err = lua_pcall(lua,0,1,-2);
 
     /* Perform some cleanup that we need to do both on error and success. */
-    if (delhook) lua_sethook(lua,NULL,0,0); /* Disable hook */
+    // 不管脚本执行是否成功，执行一些清理步骤
+    if (delhook) 
+        lua_sethook(lua,NULL,0,0); /* Disable hook */
     if (server.lua_timedout) {
         server.lua_timedout = 0;
         /* Restore the client that was protected when the script timeout
@@ -1390,6 +1405,7 @@ void evalGenericCommand(client *c, int evalsha) {
      * The call is performed every LUA_GC_CYCLE_PERIOD executed commands
      * (and for LUA_GC_CYCLE_PERIOD collection steps) because calling it
      * for every command uses too much CPU. */
+    // 因为 lua gc 比较消耗 CPU，因此每执行 50 次 lua 命令，进行一次 GC
     #define LUA_GC_CYCLE_PERIOD 50
     {
         static long gc_count = 0;
