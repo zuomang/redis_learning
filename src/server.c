@@ -1363,7 +1363,7 @@ void beforeSleep(struct aeEventLoop *eventLoop) {
      * may change the state of Redis Cluster (from ok to fail or vice versa),
      * so it's a good idea to call it before serving the unblocked clients
      * later in this function. */
-    if (server.cluster_enabled) 
+    if (server.cluster_enabled)
         clusterBeforeSleep();
 
     /* Run a fast expire cycle (the called function will return
@@ -1891,7 +1891,7 @@ void checkTcpBacklogSettings(void) {
     FILE *fp = fopen("/proc/sys/net/core/somaxconn","r");
     char buf[1024];
 
-    if (!fp) 
+    if (!fp)
         return;
 
     if (fgets(buf,sizeof(buf),fp) != NULL) {
@@ -1928,7 +1928,7 @@ int listenToPort(int port, int *fds, int *count) {
     /* Force binding of 0.0.0.0 if no bind address is specified, always
      * entering the loop if j == 0. */
     // 如果没有指定 bind option，强制 bing 到 0.0.0.0
-    if (server.bindaddr_count == 0) 
+    if (server.bindaddr_count == 0)
         server.bindaddr[0] = NULL;
     for (j = 0; j < server.bindaddr_count || j == 0; j++) {
         if (server.bindaddr[j] == NULL) {
@@ -2020,7 +2020,7 @@ void resetServerStats(void) {
     server.aof_delayed_fsync = 0;
 }
 
-void s(void) {
+void initServer(void) {
     int j;
 
     // SIGHUP和控制台操作有关
@@ -2196,7 +2196,7 @@ void s(void) {
         server.maxmemory_policy = MAXMEMORY_NO_EVICTION;
     }
 
-    if (server.cluster_enabled) 
+    if (server.cluster_enabled)
         clusterInit();
 
     replicationScriptCacheInit();
@@ -3777,7 +3777,7 @@ void daemonize(void) {
     /* Every output goes to /dev/null. If Redis is daemonized but
      * the 'logfile' is set to 'stdout' in the configuration file
      * it will not log at all. */
-    // 将所有标准输入，输出，出错都从定向到 /dev/null 
+    // 将所有标准输入，输出，出错都从定向到 /dev/null
     if ((fd = open("/dev/null", O_RDWR, 0)) != -1) {
         dup2(fd, STDIN_FILENO);
         dup2(fd, STDOUT_FILENO);
@@ -4254,7 +4254,7 @@ int main(int argc, char **argv) {
 
     // 初始化服务
     initServer();
-    if (background || server.pidfile) 
+    if (background || server.pidfile)
         createPidFile();
 
     // 设置进程的 title

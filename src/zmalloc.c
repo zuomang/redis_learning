@@ -71,10 +71,10 @@ void zlibc_free(void *ptr) {
 #define dallocx(ptr,flags) je_dallocx(ptr,flags)
 #endif
 
+// _n && (sizeof(long)-1) 表示分配的容量不能被 8 整除
+// used_memory 总数 =
 #define update_zmalloc_stat_alloc(__n) do { \
     size_t _n = (__n); \
-    // _n && (sizeof(long)-1) 表示分配的容量不能被 8 整除
-    // used_memory 总数 = 
     if (_n&(sizeof(long)-1)) _n += sizeof(long)-(_n&(sizeof(long)-1)); \
     atomicIncr(used_memory,__n); \
 } while(0)

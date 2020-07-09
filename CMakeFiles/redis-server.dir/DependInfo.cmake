@@ -1,0 +1,96 @@
+# The set of languages for which implicit dependencies are needed:
+set(CMAKE_DEPENDS_LANGUAGES
+  "C"
+  )
+# The set of files for implicit dependencies of each language:
+set(CMAKE_DEPENDS_CHECK_C
+  "/Users/i341550/CLionProjects/redis5/src/adlist.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/adlist.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/ae.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/ae.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/ae_kqueue.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/ae_kqueue.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/anet.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/anet.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/aof.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/aof.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/bio.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/bio.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/bitops.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/bitops.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/blocked.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/blocked.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/childinfo.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/childinfo.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/cluster.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/cluster.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/config.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/config.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/crc16.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/crc16.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/crc64.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/crc64.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/db.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/db.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/debug.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/debug.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/defrag.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/defrag.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/dict.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/dict.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/endianconv.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/endianconv.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/evict.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/evict.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/expire.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/expire.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/geo.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/geo.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/geohash.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/geohash.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/geohash_helper.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/geohash_helper.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/hyperloglog.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/hyperloglog.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/intset.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/intset.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/latency.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/latency.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/lazyfree.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/lazyfree.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/listpack.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/listpack.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/localtime.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/localtime.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/lolwut.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/lolwut.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/lolwut5.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/lolwut5.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/lzf_c.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/lzf_c.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/lzf_d.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/lzf_d.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/memtest.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/memtest.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/module.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/module.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/multi.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/multi.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/networking.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/networking.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/notify.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/notify.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/object.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/object.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/pqsort.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/pqsort.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/pubsub.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/pubsub.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/quicklist.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/quicklist.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/rand.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/rand.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/rax.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/rax.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/rdb.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/rdb.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/redis-check-aof.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/redis-check-aof.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/redis-check-rdb.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/redis-check-rdb.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/release.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/release.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/replication.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/replication.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/rio.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/rio.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/scripting.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/scripting.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/sds.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/sds.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/sentinel.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/sentinel.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/server.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/server.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/setproctitle.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/setproctitle.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/sha1.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/sha1.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/siphash.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/siphash.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/slowlog.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/slowlog.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/sort.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/sort.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/sparkline.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/sparkline.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/syncio.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/syncio.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_hash.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_hash.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_list.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_list.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_set.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_set.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_stream.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_stream.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_string.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_string.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/t_zset.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/t_zset.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/util.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/util.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/ziplist.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/ziplist.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/zipmap.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/zipmap.c.o"
+  "/Users/i341550/CLionProjects/redis5/src/zmalloc.c" "/Users/i341550/CLionProjects/redis5/CMakeFiles/redis-server.dir/src/zmalloc.c.o"
+  )
+set(CMAKE_C_COMPILER_ID "AppleClang")
+
+# The include file search paths:
+set(CMAKE_C_TARGET_INCLUDE_PATH
+  "deps/linenoise"
+  "deps/hiredis"
+  "deps/lua/src"
+  )
+
+# Targets to which this target links.
+set(CMAKE_TARGET_LINKED_INFO_FILES
+  "/Users/i341550/CLionProjects/redis5/deps/lua/CMakeFiles/lua.dir/DependInfo.cmake"
+  "/Users/i341550/CLionProjects/redis5/deps/linenoise/CMakeFiles/linenoise.dir/DependInfo.cmake"
+  "/Users/i341550/CLionProjects/redis5/deps/hiredis/CMakeFiles/hiredis.dir/DependInfo.cmake"
+  )
+
+# Fortran module output directory.
+set(CMAKE_Fortran_TARGET_MODULE_DIR "")

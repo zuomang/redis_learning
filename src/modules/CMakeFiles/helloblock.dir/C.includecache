@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/i341550/Code/redis5/src/modules/helloblock.c
+../redismodule.h
+/Users/i341550/Code/redis5/src/redismodule.h
+stdio.h
+-
+stdlib.h
+-
+pthread.h
+-
+unistd.h
+-
+
+/Users/i341550/Code/redis5/src/redismodule.h
+sys/types.h
+-
+stdint.h
+-
+stdio.h
+-
+
